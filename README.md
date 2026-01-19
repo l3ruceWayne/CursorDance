@@ -1,121 +1,60 @@
-# Switch2IDEA
+# CursorDance
 
-[中文](README_zh.md)
 
-> 💡 Recommended to use with [Switch2Cursor](https://github.com/qczone/switch2cursor) in IDEA
+## 🔍 项目简介
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/qczone.switch2idea?label=VS%20Marketplace&style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=qczone.switch2idea)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/qczone.switch2idea?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=qczone.switch2idea)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
+一个提升开发效率的 VS Code/Cursor 扩展，让你在 Cursor 和 VS Code 之间实现丝滑切换。现只保证在 macos 上能正常工作。
 
-## 🔍 Project Overview
+## 🌟 功能特性
 
-A Cursor extension that enhances development efficiency by enabling smooth switching between Cursor and IDEA
+- 🚀 无缝编辑器切换
 
-![Switch2IDEA Demo](images/switch-show.gif)
+  - 在 Cursor 和 VS Code 之间一键切换
+  - 自动定位到相同的光标位置（行号和列号）
+- ⌨️ 便捷的快捷键支持
 
-## 🌟 Features
-
-- 🚀 Seamless Editor Switching
-  - One-click switching between Cursor and IDEA
-  - Automatically positions to the same cursor location (line and column)
-  - Perfectly maintains editing context without interrupting workflow
-- ⌨️ Convenient Shortcut Support
   - macOS:
-    - `Option+Shift+P` - Open project in IDEA
-    - `Option+Shift+O` - Open current file in IDEA
-  - Windows:
-    - `Alt+Shift+P` - Open project in IDEA
-    - `Alt+Shift+O` - Open current file in IDEA
-- 🔧 Multiple Access Methods
-  - Keyboard shortcuts
-  - Editor context menu
-  - File explorer context menu
+    - `Option+Shift+P` - 在另一个编辑器中打开项目
+    - `Option+Shift+O` - 在另一个编辑器中打开当前文件
+    - 以上两个快捷键都需要对应应用程序打开才能生效
 
-## 🛠️ Installation Guide
+## 🛠️ 安装指南
 
-### Method 1: Install from Extension Marketplace
+### 本地安装
 
-1. Click [here](https://marketplace.visualstudio.com/items?itemName=qczone.switch2idea) to install
-2. Search for "Switch2IDEA" in the Cursor extension marketplace and install
+1. 下载最新版扩展包
+2. 在 VS Code/Cursor 中，选择 `Extensions` → `...` → `Install from VSIX`
+3. 选择下载的扩展包完成安装
 
-### Method 2: Local Installation
+## 🚀 使用说明
 
-1. Download the latest extension package
-2. In Cursor, select `Extensions` → `...` → `Install from VSIX`
-3. Select the downloaded extension package to complete installation
+### 基础使用
 
-## 🚀 Usage Instructions
+#### 打开项目
 
-### Basic Usage
+- 快捷键：`Alt+Shift+P`
+- 右键菜单：在文件浏览器中右键 → `Open Project in Other Editor`
 
-#### Open Project
+#### 打开当前文件
 
-- Shortcut: `Alt+Shift+P`
-- Context Menu: Right-click in file explorer → `Open Project in IDEA`
+- 快捷键：`Alt+Shift+O`
+- 右键菜单：
+  - 在编辑器中右键 → `Open File in Other Editor`
+  - 在文件浏览器中右键 → `Open File in Other Editor`
 
-#### Open Current File
+### 配置
 
-- Shortcut: `Alt+Shift+O`
-- Context Menu:
-  - Right-click in editor → `Open File in IDEA`
-  - Right-click in file explorer → `Open File in IDEA`
+可选，仅当自动识别失败时需要配置：
 
-### Configuration
+- `switch2cursor.cursorPath`：Cursor 可执行文件路径 / CLI 命令 / macOS App 名称
+- `switch2cursor.vscodePath`：VS Code 可执行文件路径 / CLI 命令 / macOS App 名称
 
-Open Cursor settings, click `General` → `Editor` → `open editor settings` → `Extensions` → `Switch2IDEA` → `Idea Path`
-
-- macOS: Automatically traverses common IDEA installation paths
-- Windows: Default `C:\Program Files\JetBrains\IntelliJ IDEA\bin\idea64.exe`
-- Linux: Default `idea`
-
-### Requirements
+### 环境要求
 
 - Cursor 1.93.1+
-- IntelliJ IDEA or other JetBrains IDEs
+- VS Code 1.93.1+
+- 如需双向切换，请在两个编辑器里都安装本扩展
 
-## 🧑‍💻 Developer Guide
+## 🧑‍💻 开发者指南
 
-Issues and Pull Requests are welcome to improve this extension.
-
-## 🙋 FAQ
-
-### 1. No jump to IDEA after using shortcut/right-click menu?
-
-Please check the following steps:
-
-1. Open Cursor settings, click `General` → `Editor` → `open editor settings` → `Extensions` → `Switch2IDEA`
-2. Verify that Idea Path is correctly configured to IDEA's executable path
-
-### 2. Does it support jumping to other IDEs?
-
-Yes, you can configure Idea Path to the executable path of other JetBrains IDEs
-
-### 3. How to define different IDEs for different projects?
-
-You can configure IDE paths separately for each workspace:
-
-1. Open Cursor settings, click `General` → `Editor` → `open editor settings`
-2. Select the `Workspace` tab
-3. Navigate to `Extensions` → `Switch2IDEA` → `ideaPath`
-4. Enter the IDE path needed for that project
-
-Configuration examples:
-
-- Frontend project: Configure WebStorm path
-- Spring Boot project: Configure IDEA path
-- Python project: Configure PyCharm path
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE)
-
-## 📮 Feedback
-
-If you encounter issues or have suggestions, please provide feedback through:
-
-- [Submit GitHub Issue](https://github.com/qczone/switch2idea/issues) 
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=qczone/switch2idea&type=Date)](https://star-history.com/#qczone/switch2idea&Date)
+欢迎提交 Issue 和 Pull Request 来改进这个扩展。

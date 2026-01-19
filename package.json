@@ -1,13 +1,13 @@
 {
-  "name": "switch2idea",
-  "displayName": "Switch2IDEA",
-  "description": "Quickly switch between VS Code and IntelliJ IDEA, open current file in IDEA with the same position",
-  "version": "1.0.3",
-  "publisher": "qczone",
+  "name": "CursorDance",
+  "displayName": "CursorDance",
+  "description": "Quickly switch between VS Code and Cursor, open current file in the other editor with the same position",
+  "version": "1.2.0",
+  "publisher": "l3ruceWayne",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qczone/switch2idea"
+    "url": "https://github.com/l3ruceWayne/CursorDance"
   },
   "icon": "images/icon.png",
   "engines": {
@@ -18,9 +18,8 @@
     "Programming Languages"
   ],
   "keywords": [
-    "intellij",
-    "idea",
-    "jetbrains",
+    "cursor",
+    "vscode",
     "switch",
     "open"
   ],
@@ -31,65 +30,70 @@
   "contributes": {
     "commands": [
       {
-        "command": "Switch2IDEA.openFileInIDEA",
-        "title": "Open File in IDEA"
+        "command": "Switch2Cursor.openFileInOtherEditor",
+        "title": "Open File in Other Editor"
       },
       {
-        "command": "Switch2IDEA.openProjectInIDEA",
-        "title": "Open Project in IDEA"
+        "command": "Switch2Cursor.openProjectInOtherEditor",
+        "title": "Open Project in Other Editor"
       }
     ],
     "keybindings": [
       {
-        "command": "Switch2IDEA.openFileInIDEA",
+        "command": "Switch2Cursor.openFileInOtherEditor",
         "key": "alt+shift+o",
         "mac": "alt+shift+o",
         "when": "editorTextFocus"
       },
       {
-        "command": "Switch2IDEA.openProjectInIDEA",
+        "command": "Switch2Cursor.openProjectInOtherEditor",
         "key": "alt+shift+p",
         "mac": "alt+shift+p"
       }
     ],
     "configuration": {
-      "title": "Switch2IDEA",
+      "title": "CursorDance",
       "properties": {
-        "switch2idea.ideaPath": {
+        "switch2cursor.cursorPath": {
           "type": "string",
           "default": "",
-          "description": "IDEA executable path"
+          "description": "Cursor executable path / CLI command / macOS app name"
+        },
+        "switch2cursor.vscodePath": {
+          "type": "string",
+          "default": "",
+          "description": "VS Code executable path / CLI command / macOS app name"
         }
       }
     },
     "menus": {
       "editor/context": [
         {
-          "command": "Switch2IDEA.openFileInIDEA",
+          "command": "Switch2Cursor.openFileInOtherEditor",
           "group": "navigation"
         }
       ],
       "explorer/context": [
         {
-          "command": "Switch2IDEA.openFileInIDEA",
+          "command": "Switch2Cursor.openFileInOtherEditor",
           "group": "navigation"
         },
         {
-          "command": "Switch2IDEA.openProjectInIDEA",
+          "command": "Switch2Cursor.openProjectInOtherEditor",
           "group": "navigation"
         }
       ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "pnpm run compile && pnpm run lint",
+    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "package": "pnpm vsce package --no-dependencies",
-    "publish": "pnpm vsce publish --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
   },
   "packageManager": "pnpm@9.6.0",
   "devDependencies": {

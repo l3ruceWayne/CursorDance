@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 
-suite('Switch2IDEA Extension Test Suite', () => {
+suite('CursorDance Extension Test Suite', () => {
 	// 在所有测试开始前激活扩展
 	suiteSetup(async () => {
 		// 等待扩展激活
@@ -27,18 +27,17 @@ suite('Switch2IDEA Extension Test Suite', () => {
 		assert.ok(extension.isActive, 'Extension should be activated');
 	});
 
-	test('Should register open in IDEA command', () => {
+	test('Should register commands', async () => {
 		const commands = vscode.commands.getCommands(true);
-		return commands.then((cmds) => {
-			assert.ok(cmds.includes('Switch2IDEA.openInIDEA'));
-		});
+		const cmds = await commands;
+		assert.ok(cmds.includes('Switch2Cursor.openFileInOtherEditor'));
+		assert.ok(cmds.includes('Switch2Cursor.openProjectInOtherEditor'));
 	});
 
 	test('Should have correct configuration', () => {
-		const config = vscode.workspace.getConfiguration('switch2idea');
-		assert.ok(config.has('ideaPath'));
-		assert.ok(config.has('keyboardShortcut'));
-		assert.strictEqual(config.get('keyboardShortcut'), 'alt+shift+o');
+		const config = vscode.workspace.getConfiguration('switch2cursor');
+		assert.ok(config.has('cursorPath'));
+		assert.ok(config.has('vscodePath'));
 	});
 
 	test('Should handle file path with spaces and special characters', async () => {
@@ -56,10 +55,10 @@ suite('Switch2IDEA Extension Test Suite', () => {
 			const editor = await vscode.window.showTextDocument(doc);
 
 			// Execute command
-			await vscode.commands.executeCommand('Switch2IDEA.openInIDEA');
+			await vscode.commands.executeCommand('Switch2Cursor.openFileInOtherEditor');
 
 			// Verify command execution completed without errors
-			// Note: We cannot verify if IDEA actually opened the file as it's an external process
+			// Note: We cannot verify if the other editor actually opened the file as it's an external process
 			assert.ok(true);
 		} finally {
 			// Cleanup test file
@@ -90,7 +89,7 @@ suite('Switch2IDEA Extension Test Suite', () => {
 			editor.selection = new vscode.Selection(position, position);
 
 			// Execute command
-			await vscode.commands.executeCommand('Switch2IDEA.openInIDEA');
+			await vscode.commands.executeCommand('Switch2Cursor.openFileInOtherEditor');
 
 			// Verify command execution completed without errors
 			assert.ok(true);
@@ -104,22 +103,22 @@ suite('Switch2IDEA Extension Test Suite', () => {
 		}
 	});
 
-	test('Should handle non-existent ideaPath gracefully', async () => {
-		// Temporarily set a non-existent ideaPath
-		const config = vscode.workspace.getConfiguration('switch2idea');
-		const originalPath = config.get('ideaPath');
+	test('Should handle non-existent cursorPath gracefully', async () => {
+		// Temporarily set a non-existent cursorPath
+		const config = vscode.workspace.getConfiguration('switch2cursor');
+		const originalPath = config.get('cursorPath');
 		
 		try {
-			await config.update('ideaPath', 'non-existent-path', vscode.ConfigurationTarget.Global);
+			await config.update('cursorPath', 'non-existent-path', vscode.ConfigurationTarget.Global);
 			
 			// Execute command
-			await vscode.commands.executeCommand('Switch2IDEA.openInIDEA');
+			await vscode.commands.executeCommand('Switch2Cursor.openFileInOtherEditor');
 			
 			// Command should complete without crashing
 			assert.ok(true);
 		} finally {
 			// Restore original settings
-			await config.update('ideaPath', originalPath, vscode.ConfigurationTarget.Global);
+			await config.update('cursorPath', originalPath, vscode.ConfigurationTarget.Global);
 		}
 	});
 });
