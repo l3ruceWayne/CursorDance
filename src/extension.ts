@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { execFile } from 'child_process';
 import * as os from 'os';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pathToFileURL } from 'url';
@@ -86,6 +87,16 @@ function resolveMacApp(target: TargetEditor, configured?: string): { kind: 'open
 
 	// Common CLI shims (case-sensitive so "Cursor" / "Visual Studio Code" can be treated as app names).
 	if (value === 'code' || value === 'cursor') {
+		// Prefer an absolute, bundled CLI so this still works when PATH is minimal in the extension host.
+		for (const candidate of getMacAppCandidates(target)) {
+			if (fs.existsSync(candidate)) {
+				const cliPath = getMacCliPathFromApp(target, candidate);
+				if (fs.existsSync(cliPath)) {
+					return { kind: 'exec', command: cliPath };
+				}
+				break;
+			}
+		}
 		return { kind: 'exec', command: value };
 	}
 
@@ -224,9 +235,12 @@ function buildMacFileUrl(target: TargetEditor, filePath: string, line: number, c
 
 function buildMacProjectUrl(target: TargetEditor, projectPath: string, configuredPath?: string): string {
 	const scheme = getMacUrlScheme(target, configuredPath);
-	// Cursor/VS Code URL handlers behave more reliably for folders when the path ends with '/'.
 	const pathname = pathToFileURL(projectPath).pathname;
-	const encodedPath = pathname.endsWith('/') ? pathname : `${pathname}/`;
+	// Cursor/VS Code URL handlers behave more reliably for folders when the path ends with '/',
+	// but `.code-workspace` is a file path and must NOT end with '/'.
+	const encodedPath = isDirectoryPath(projectPath)
+		? (pathname.endsWith('/') ? pathname : `${pathname}/`)
+		: pathname;
 	return `${scheme}://file${encodedPath}`;
 }
 
@@ -250,6 +264,7 @@ function buildOpenFileCommand(target: TargetEditor, filePath: string, line: numb
 function buildOpenProjectCommand(target: TargetEditor, projectPath: string, configuredPath?: string): { command: string; args: string[] } {
 	const platform = os.platform();
 	if (platform === 'darwin') {
+		// Prefer URL scheme so macOS can correctly route to an existing window without "extra dock icon" flashes.
 		return { command: getMacOpenCommand(), args: [buildMacProjectUrl(target, projectPath, configuredPath)] };
 	}
 
@@ -288,6 +303,52 @@ function getWorkspaceFolderPathForFile(filePath: string): string | undefined {
 	}
 
 	return bestMatch ?? folders[0].uri.fsPath;
+}
+
+function tryGetWorkspaceFilePath(): string | undefined {
+	const workspaceFile = vscode.workspace.workspaceFile;
+	if (!workspaceFile || workspaceFile.scheme !== 'file') {
+		return undefined;
+	}
+	return workspaceFile.fsPath;
+}
+
+function tryBuildTempWorkspaceFile(): string | undefined {
+	const folders = vscode.workspace.workspaceFolders;
+	if (!folders || folders.length <= 1) {
+		return undefined;
+	}
+
+	// Only support local multi-root workspaces. The rest of this extension relies on local fs paths.
+	if (folders.some((folder) => folder.uri.scheme !== 'file')) {
+		return undefined;
+	}
+
+	const folderPaths = folders.map((folder) => folder.uri.fsPath);
+	const hash = crypto.createHash('sha1').update(folderPaths.join('\n')).digest('hex').slice(0, 12);
+	const workspacePath = path.join(os.tmpdir(), `cursordance-${hash}.code-workspace`);
+
+	const contents = JSON.stringify(
+		{
+			folders: folderPaths.map((p) => ({ path: p })),
+		},
+		null,
+		2
+	);
+
+	try {
+		if (!fs.existsSync(workspacePath) || fs.readFileSync(workspacePath, 'utf8') !== contents) {
+			fs.writeFileSync(workspacePath, contents, 'utf8');
+		}
+		return workspacePath;
+	} catch {
+		return undefined;
+	}
+}
+
+function getWorkspaceOpenPath(): string | undefined {
+	// Saved workspace (.code-workspace) takes precedence.
+	return tryGetWorkspaceFilePath() ?? tryBuildTempWorkspaceFile();
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -336,9 +397,8 @@ export function activate(context: vscode.ExtensionContext) {
 			const platform = os.platform();
 			if (platform === 'darwin') {
 				const isDir = isDirectoryPath(filePath);
-				const projectPath = isDir
-					? filePath
-					: (getWorkspaceFolderPathForFile(filePath) ?? path.dirname(filePath));
+				const workspacePath = getWorkspaceOpenPath();
+				const projectPath = isDir ? filePath : (workspacePath ?? (getWorkspaceFolderPathForFile(filePath) ?? path.dirname(filePath)));
 
 				const projectCmd = buildOpenProjectCommand(target, projectPath, configuredPath);
 				console.log('Executing command:', projectCmd.command, projectCmd.args);
@@ -360,9 +420,29 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			const { command, args } = buildOpenFileCommand(target, filePath, line, column, configuredPath);
-			console.log('Executing command:', command, args);
-			await executeCommand(command, args);
+			const isDir = isDirectoryPath(filePath);
+			const workspacePath = getWorkspaceOpenPath();
+
+			// In multi-root workspaces, open the workspace first so the other editor loads the same workspace.
+			if (!isDir && workspacePath) {
+				const projectCmd = buildOpenProjectCommand(target, workspacePath, configuredPath);
+				console.log('Executing command:', projectCmd.command, projectCmd.args);
+				try {
+					await executeCommand(projectCmd.command, projectCmd.args);
+				} catch {
+					// Best-effort: still attempt to open the file.
+				}
+			}
+
+			if (isDir) {
+				const projectCmd = buildOpenProjectCommand(target, filePath, configuredPath);
+				console.log('Executing command:', projectCmd.command, projectCmd.args);
+				await executeCommand(projectCmd.command, projectCmd.args);
+			} else {
+				const { command, args } = buildOpenFileCommand(target, filePath, line, column, configuredPath);
+				console.log('Executing command:', command, args);
+				await executeCommand(command, args);
+			}
 		} catch (error) {
 			const err = error as Error;
 			vscode.window.showErrorMessage(`Failed to open ${getEditorLabel(target)}: ${err.message}`);
@@ -376,7 +456,7 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		const projectPath = workspaceFolders[0].uri.fsPath;
+		const projectPath = getWorkspaceOpenPath() ?? workspaceFolders[0].uri.fsPath;
 
 		const host = getHostEditor();
 		const target = getOtherEditor(host);
